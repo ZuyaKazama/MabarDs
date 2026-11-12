@@ -1,0 +1,12 @@
+[Emu]
+DirectBoot = true
+ExternalBIOSEnable = false
+
+[LAN]
+PlayerName = "zuya"
+
+[Instance0.Firmware]
+OverrideSettings = true
+Username = "zuya"
+Language = 1
+MAC = "00:09:BF:48:44:B7"

@@ -1,0 +1,16 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.cxx/
+app/src/main/cpp/external/
+*.keystore
+*.jks
+/app/prebuilt/
+.claude-session/
+profile-out/
+build-linux/
+*.apk
+.kotlin/
+CLAUDE.md

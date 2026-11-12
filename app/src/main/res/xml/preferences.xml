@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Performa">
+        <SwitchPreferenceCompat app:key="jit" app:defaultValue="true"
+            app:title="JIT recompiler"
+            app:summary="Menerjemahkan kode ARM DS ke ARM64. Jauh lebih cepat; matikan hanya jika game crash." />
+        <SwitchPreferenceCompat app:key="jit_fastmem" app:defaultValue="true" app:dependency="jit"
+            app:title="Fastmem" app:summary="Akses memori cepat untuk JIT" />
+        <ListPreference app:key="jit_block" app:defaultValue="32" app:dependency="jit"
+            app:title="Ukuran blok JIT" app:entries="@array/jit_block_names" app:entryValues="@array/jit_block_values"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat app:key="threaded3d" app:defaultValue="true"
+            app:title="Render 3D multi-thread" app:summary="Render 3D di core CPU terpisah" />
+        <ListPreference app:key="ff_speed" app:defaultValue="3"
+            app:title="Kecepatan fast-forward" app:entries="@array/ff_names" app:entryValues="@array/ff_values"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat app:key="show_fps" app:defaultValue="true" app:title="Tampilkan FPS" />
+        <SwitchPreferenceCompat app:key="show_frametime" app:defaultValue="false" app:dependency="show_fps"
+            app:title="Tampilkan waktu per frame"
+            app:summary="Milidetik untuk emulasi dan untuk menampilkan gambar, untuk mencari penyebab lag" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Grafis">
+        <ListPreference app:key="renderer" app:defaultValue="0"
+            app:title="Renderer" app:entries="@array/renderer_names" app:entryValues="@array/renderer_values"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference app:key="speed_hack" app:defaultValue="0"
+            app:title="Mode kecepatan" app:entries="@array/speed_hack_names" app:entryValues="@array/speed_hack_values"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference app:key="frameskip" app:defaultValue="-1"
+            app:title="Frameskip" app:entries="@array/frameskip_names" app:entryValues="@array/frameskip_values"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference app:key="scale" app:defaultValue="2"
+            app:title="Resolusi internal" app:entries="@array/scale_names" app:entryValues="@array/scale_values"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat app:key="better_polygons" app:defaultValue="true"
+            app:title="Pembagian poligon lebih baik"
+            app:summary="Mengurangi distorsi tekstur 3D di resolusi tinggi (renderer OpenGL)" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Tampilan">
+        <ListPreference app:key="layout" app:defaultValue="0"
+            app:title="Tata letak layar" app:entries="@array/layouts" app:entryValues="@array/layout_values"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat app:key="swap" app:defaultValue="false" app:title="Tukar layar atas/bawah" />
+        <SwitchPreferenceCompat app:key="linear_filter" app:defaultValue="false"
+            app:title="Filter halus (linear)" app:summary="Mati = piksel tajam" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Kontrol">
+        <SeekBarPreference app:key="controls_opacity" app:defaultValue="55" app:min="10" android:max="100"
+            app:showSeekBarValue="true" app:title="Transparansi tombol (%)" />
+        <SeekBarPreference app:key="controls_scale" app:defaultValue="100" app:min="60" android:max="160"
+            app:showSeekBarValue="true" app:title="Ukuran tombol (%)" />
+        <SwitchPreferenceCompat app:key="haptics" app:defaultValue="true" app:title="Getar saat menekan tombol" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Audio">
+        <SwitchPreferenceCompat app:key="audio" app:defaultValue="true" app:title="Suara" />
+        <SeekBarPreference app:key="volume" app:defaultValue="100" app:min="0" android:max="100"
+            app:showSeekBarValue="true" app:title="Volume" />
+        <ListPreference app:key="audio_interp" app:defaultValue="0"
+            app:title="Interpolasi audio" app:entries="@array/interp_names" app:entryValues="@array/interp_values"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Profil DS (firmware)">
+        <EditTextPreference app:key="nickname" app:title="Nama (maks. 10 huruf)"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference app:key="language" app:defaultValue="1"
+            app:title="Bahasa" app:entries="@array/lang_names" app:entryValues="@array/lang_values"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference app:key="fav_color" app:defaultValue="0"
+            app:title="Warna favorit" app:entries="@array/color_names" app:entryValues="@array/color_values"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference app:key="birth_month" app:defaultValue="1" app:title="Bulan lahir (1-12)"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference app:key="birth_day" app:defaultValue="1" app:title="Tanggal lahir (1-31)"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Jaringan">
+        <EditTextPreference app:key="dns" app:title="DNS kustom Nintendo WFC"
+            app:summary="Kosongkan = otomatis. Isi alamat DNS server pengganti WFC (mis. Wiimmfi) untuk main online resmi game yang mendukung."
+            app:dialogMessage="Format: a.b.c.d" />
+        <Preference app:key="mac_info" app:title="Alamat MAC perangkat ini"
+            app:selectable="false" />
+        <Preference app:key="share_log" app:title="Bagikan log diagnostik"
+            app:summary="Untuk melaporkan crash, putus koneksi multiplayer, atau bug grafis" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Tentang">
+        <Preference app:title="MabarDs"
+            app:summary="Frontend Android untuk core melonDS (GPL-3.0). Tidak menyertakan ROM atau BIOS; memakai FreeBIOS bawaan melonDS."
+            app:selectable="false" />
+    </PreferenceCategory>
+</PreferenceScreen>

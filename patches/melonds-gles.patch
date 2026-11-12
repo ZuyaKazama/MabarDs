@@ -1,0 +1,349 @@
+diff --git a/src/GPU.h b/src/GPU.h
+index b0e1faf..850c08d 100644
+--- a/src/GPU.h
++++ b/src/GPU.h
+@@ -704,6 +704,17 @@ public:
+     u32 OAMDirty = 0;
+     u32 PaletteDirty = 0;
+ 
++#ifdef EMUNDS_FRAMESKIP
++    // EmuNDS frameskip: when set (by the frontend, for a whole RunFrame), the software
++    // renderer skips 2D drawing/compositing. Frames with display capture are never skipped.
++    bool SkipDraw = false;
++#endif
++
++#ifdef MELONDS_GLES
++    // EmuNDS: public so the GL renderer can save captures to VRAM before it resizes them
++    void SyncAllVRAMCaptures();
++#endif
++
+ private:
+     void ResetVRAMCache() noexcept;
+ 
+@@ -789,7 +800,9 @@ private:
+     void CheckCaptureStart();
+     void CheckCaptureEnd();
+     void SyncVRAMCaptureBlock(u32 block, bool write);
++#ifndef MELONDS_GLES
+     void SyncAllVRAMCaptures();
++#endif
+     void GetCaptureInfo(int* info, u16** cbf, int len);
+ 
+     void SetDispStatIRQ(int cpu, int num);
+diff --git a/src/GPU2D_OpenGL.cpp b/src/GPU2D_OpenGL.cpp
+index b823658..dab8473 100644
+--- a/src/GPU2D_OpenGL.cpp
++++ b/src/GPU2D_OpenGL.cpp
+@@ -481,6 +481,22 @@ void GLRenderer2D::SetScaleFactor(int scale)
+     glBindFramebuffer(GL_FRAMEBUFFER, OutputFB);
+     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, OutputTex, 0);
+     glDrawBuffer(GL_COLOR_ATTACHMENT0);
++
++#ifdef MELONDS_GLES
++    // fresh textures hold undefined memory on mobile GPUs
++    glDisable(GL_SCISSOR_TEST);
++    glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
++    glColorMaski(1, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
++    glDepthMask(GL_TRUE);
++    glClearColor(0, 0, 0, 0);
++    glClearDepthf(1.f);
++    glBindFramebuffer(GL_FRAMEBUFFER, OBJLayerFB);
++    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
++    glBindFramebuffer(GL_FRAMEBUFFER, OutputFB);
++    glClearColor(0, 0, 0, 1);
++    glClear(GL_COLOR_BUFFER_BIT);
++    glBindFramebuffer(GL_FRAMEBUFFER, 0);
++#endif
+ }
+ 
+ 
+diff --git a/src/GPU3D_OpenGL.cpp b/src/GPU3D_OpenGL.cpp
+index 7bd208b..db6ca1d 100644
+--- a/src/GPU3D_OpenGL.cpp
++++ b/src/GPU3D_OpenGL.cpp
+@@ -362,6 +362,19 @@ void GLRenderer3D::SetRenderSettings(int scale, bool betterpolygons) noexcept
+     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, AttrBufferTex, 0);
+     glDrawBuffers(2, fbassign);
+ 
++#ifdef MELONDS_GLES
++    glDisable(GL_SCISSOR_TEST);
++    glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
++    glColorMaski(1, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
++    glDepthMask(GL_TRUE);
++    glStencilMask(0xFF);
++    glClearColor(0, 0, 0, 0);
++    glClearDepthf(1.f);
++    glClearStencil(0);
++    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
++    ForceRender = true;
++#endif
++
+     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+ 
+     //glLineWidth(scale);
+@@ -1274,10 +1287,18 @@ void GLRenderer3D::RenderSceneChunk(int y, int h)
+ void GLRenderer3D::RenderFrame()
+ {
+     u8 clrBitmapDirty;
++#ifdef MELONDS_GLES
++    if (!Texcache.Update(clrBitmapDirty) && GPU3D.RenderFrameIdentical && !ForceRender)
++    {
++        return;
++    }
++    ForceRender = false;
++#else
+     if (!Texcache.Update(clrBitmapDirty) && GPU3D.RenderFrameIdentical)
+     {
+         return;
+     }
++#endif
+ 
+     // figure out which chunks of texture memory contain display captures
+     int captureinfo[16];
+diff --git a/src/GPU3D_OpenGL.h b/src/GPU3D_OpenGL.h
+index 29356ef..a6371d1 100644
+--- a/src/GPU3D_OpenGL.h
++++ b/src/GPU3D_OpenGL.h
+@@ -130,6 +130,10 @@ private:
+     GLuint ClearBitmapTex[2] {};
+     u32* ClearBitmap[2] {};
+     u8 ClearBitmapDirty {};
++#ifdef MELONDS_GLES
++    // EmuNDS: set when the buffers were reallocated; RenderFrame must not skip the next frame
++    bool ForceRender = true;
++#endif
+ 
+     // vertex buffer
+     // * XYZW: 4x16bit
+diff --git a/src/GPU3D_Texcache.h b/src/GPU3D_Texcache.h
+index 7e8a95d..3208de8 100644
+--- a/src/GPU3D_Texcache.h
++++ b/src/GPU3D_Texcache.h
+@@ -277,7 +277,13 @@ public:
+             texArrays.resize(texArrays.size()+1);
+             TexHandleT& array = texArrays[texArrays.size()-1];
+ 
++#ifdef MELONDS_GLES
++            // Mali/Adreno copy a whole texture when a still-in-use one is updated
++            // ("resource ghosting"), so keep each array small (1 MB instead of 8 MB).
++            u32 layers = std::max<u32>(1, std::min<u32>((1*1024*1024) / (width*height*4), 64));
++#else
+             u32 layers = std::min<u32>((8*1024*1024) / (width*height*4), 64);
++#endif
+ 
+             // allocate new array texture
+             //printf("allocating new layer set for %d %d %d %d\n", width, height, texArrays.size()-1, array.ImageDescriptor);
+diff --git a/src/GPU3D_TexcacheOpenGL.cpp b/src/GPU3D_TexcacheOpenGL.cpp
+index 08c684b..6508ff0 100644
+--- a/src/GPU3D_TexcacheOpenGL.cpp
++++ b/src/GPU3D_TexcacheOpenGL.cpp
+@@ -11,7 +11,11 @@ GLuint TexcacheOpenGLLoader::GenerateTexture(u32 width, u32 height, u32 layers)
+     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+ 
++#ifdef MELONDS_GLES
++    if (true) // immutable storage avoids per-upload validation in mobile drivers
++#else
+     if (IsCompute)
++#endif
+         glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8UI, width, height, layers);
+     else
+         glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8UI, width, height, layers, 0, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, nullptr);
+diff --git a/src/GPU_OpenGL.cpp b/src/GPU_OpenGL.cpp
+index 4853369..1ba5a05 100644
+--- a/src/GPU_OpenGL.cpp
++++ b/src/GPU_OpenGL.cpp
+@@ -52,6 +52,30 @@ GLRenderer::GLRenderer(melonDS::NDS& nds, bool compute)
+     ScaleFactor = 0;
+ }
+ 
++
++#ifdef MELONDS_GLES
++// EmuNDS: textures (re)allocated by a resolution change hold undefined memory on Mali/Adreno
++// (visible as garbage until every pass has rendered again), so clear them.
++static inline void EmundsClearFB(GLuint fb, int numColor, bool depthStencil, float alpha)
++{
++    glBindFramebuffer(GL_FRAMEBUFFER, fb);
++    glDisable(GL_SCISSOR_TEST);
++    for (int i = 0; i < numColor; i++)
++        glColorMaski(i, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
++    glClearColor(0, 0, 0, alpha);
++    GLbitfield bits = numColor ? GL_COLOR_BUFFER_BIT : 0;
++    if (depthStencil)
++    {
++        glDepthMask(GL_TRUE);
++        glStencilMask(0xFF);
++        glClearDepthf(1.f);
++        glClearStencil(0);
++        bits |= GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
++    }
++    glClear(bits);
++}
++#endif
++
+ #define glTexParams(target, wrap) \
+     glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap); \
+     glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap); \
+@@ -347,6 +371,13 @@ void GLRenderer::SetScaleFactor(int scale)
+     if (scale == ScaleFactor)
+         return;
+ 
++#ifdef MELONDS_GLES
++    // hi-res captures are about to be thrown away: write them back to emulated VRAM first,
++    // so games that display a previous capture keep a valid (1x) image until they capture again
++    if (ScaleFactor != 0)
++        GPU.SyncAllVRAMCaptures();
++#endif
++
+     ScaleFactor = scale;
+     ScreenW = 256 * scale;
+     ScreenH = 192 * scale;
+@@ -392,6 +423,13 @@ void GLRenderer::SetScaleFactor(int scale)
+         glDrawBuffers(2, fbassign2);
+     }
+ 
++#ifdef MELONDS_GLES
++    for (int i = 0; i < 2; i++) EmundsClearFB(FPOutputFB[i], 2, false, 1.f);
++    for (int i = 0; i < 4; i++) EmundsClearFB(CaptureOutput256FB[i], 1, false, 0.f);
++    for (int i = 0; i < 16; i++) EmundsClearFB(CaptureOutput128FB[i], 1, false, 0.f);
++    EmundsClearFB(CaptureVRAMFB, 1, false, 0.f);
++#endif
++
+     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+ }
+ 
+diff --git a/src/GPU_Soft.cpp b/src/GPU_Soft.cpp
+index 861c1a6..408835c 100644
+--- a/src/GPU_Soft.cpp
++++ b/src/GPU_Soft.cpp
+@@ -94,6 +94,16 @@ void SoftRenderer::SetRenderSettings(RendererSettings& settings)
+ 
+ void SoftRenderer::DrawScanline(u32 line)
+ {
++#ifdef EMUNDS_FRAMESKIP
++    if (GPU.SkipDraw && !GPU.CaptureEnable)
++    {
++        // still consume the threaded 3D renderer's per-scanline signal,
++        // otherwise the next drawn frame would read 3D lines before they are rendered
++        if (GPU.VCount < 192)
++            Rend3D->GetLine(GPU.VCount);
++        return;
++    }
++#endif
+     u32 *dstA, *dstB;
+     u32 dstoffset = 256 * line;
+     if (GPU.ScreenSwap)
+@@ -159,6 +169,11 @@ void SoftRenderer::DrawScanline(u32 line)
+ 
+ void SoftRenderer::DrawSprites(u32 line)
+ {
++#ifdef EMUNDS_FRAMESKIP
++    // line 0 is pre-rendered at the end of the frame for the next one: keep it
++    if (GPU.SkipDraw && line != 0 && !GPU.CaptureEnable)
++        return;
++#endif
+     Rend2D_A->DrawSprites(line);
+     Rend2D_B->DrawSprites(line);
+ }
+diff --git a/src/NDS.cpp b/src/NDS.cpp
+index cd88ec2..8039479 100644
+--- a/src/NDS.cpp
++++ b/src/NDS.cpp
+@@ -49,7 +49,14 @@ namespace melonDS
+ {
+ using namespace Platform;
+ 
++#ifdef EMUNDS_FRAMESKIP
++// EmuNDS speed hack: longest stretch (in 33 MHz cycles) the ARM9/ARM7 run before resyncing.
++// 64 = accurate; larger values cut scheduler/JIT switching overhead at the cost of timing accuracy.
++s32 EmundsMaxIterationCycles = 64;
++#define kMaxIterationCycles EmundsMaxIterationCycles
++#else
+ const s32 kMaxIterationCycles = 64;
++#endif
+ const s32 kIterationCycleMargin = 8;
+ 
+ // timing notes
+diff --git a/src/NDS.h b/src/NDS.h
+index 729706b..50f93a8 100644
+--- a/src/NDS.h
++++ b/src/NDS.h
+@@ -50,6 +50,9 @@
+ 
+ namespace melonDS
+ {
++#ifdef EMUNDS_FRAMESKIP
++extern s32 EmundsMaxIterationCycles; // see NDS.cpp
++#endif
+ struct NDSArgs;
+ class Firmware;
+ enum
+diff --git a/src/OpenGLSupport.cpp b/src/OpenGLSupport.cpp
+index accc735..7b25903 100644
+--- a/src/OpenGLSupport.cpp
++++ b/src/OpenGLSupport.cpp
+@@ -287,7 +287,11 @@ bool CompileComputeProgram(GLuint& result, const std::string& source, const std:
+ 
+     shader = glCreateShader(GL_COMPUTE_SHADER);
+ 
++#ifdef MELONDS_GLES
++    if (!CompilerShader(shader, emunds_TranslateShader(source, false, nullptr, 0), name, "compute"))
++#else
+     if (!CompilerShader(shader, source, name, "compute"))
++#endif
+         goto error;
+ 
+     linkingSucess = LinkProgram(result, &shader, 1);
+@@ -330,11 +334,23 @@ bool CompileVertexFragmentProgram(GLuint& result,
+ 
+     bool linkingSucess = false;
+ 
++#ifdef MELONDS_GLES
++    {
++        std::vector<EmundsFragOut> outs;
++        for (const AttributeTarget& target : fragmentOutAttrs)
++            outs.push_back({target.Name, target.Location});
++        if (!CompilerShader(shaders[0], emunds_TranslateShader(vs, false, nullptr, 0), name, "vertex"))
++            goto error;
++        if (!CompilerShader(shaders[1], emunds_TranslateShader(fs, true, outs.data(), (int)outs.size()), name, "fragment"))
++            goto error;
++    }
++#else
+     if (!CompilerShader(shaders[0], vs, name, "vertex"))
+         goto error;
+ 
+     if (!CompilerShader(shaders[1], fs, name, "fragment"))
+         goto error;
++#endif
+ 
+ 
+     for (const AttributeTarget& target : vertexInAttrs)
+diff --git a/src/net/LAN.cpp b/src/net/LAN.cpp
+index 0f43803..2e47481 100644
+--- a/src/net/LAN.cpp
++++ b/src/net/LAN.cpp
+@@ -572,6 +572,12 @@ void LAN::ProcessHostEvent(ENetEvent& event)
+             Player* player = (Player*)event.peer->data;
+             if (!player) break;
+ 
++            // EmuNDS: log broken sessions (ENet times a peer out after ~5 s without answers)
++            Platform::Log(Platform::LogLevel::Warn,
++                "LAN[host]: player %d '%.31s' disconnected, rtt=%ums, lost=%u/%u packets\n",
++                player->ID, player->Name,
++                event.peer->roundTripTime, event.peer->packetsLost, event.peer->packetsSent);
++
+             ConnectedBitmask &= ~(1 << player->ID);
+ 
+             int id = player->ID;
+@@ -696,6 +702,11 @@ void LAN::ProcessClientEvent(ENetEvent& event)
+             Player* player = (Player*)event.peer->data;
+             if (!player) break;
+ 
++            Platform::Log(Platform::LogLevel::Warn,
++                "LAN[client]: lost player %d '%.31s', rtt=%ums, lost=%u/%u packets\n",
++                player->ID, player->Name,
++                event.peer->roundTripTime, event.peer->packetsLost, event.peer->packetsSent);
++
+             ConnectedBitmask &= ~(1 << player->ID);
+ 
+             int id = player->ID;

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MabarDs</string>
+    <string name="multiplayer">Multiplayer</string>
+    <string name="settings">Pengaturan</string>
+
+    <!-- library -->
+    <string name="pick_folder">Pilih folder ROM</string>
+    <string name="empty_library">Belum ada ROM.\nPilih folder yang berisi file .nds kamu.</string>
+    <string name="scanning">Memindai ROM…</string>
+    <string name="rom_count">%d game</string>
+    <string name="pick_game_for_mp">Pilih game untuk sesi multiplayer</string>
+
+    <!-- emulator -->
+    <string name="loading_rom">Memuat ROM…</string>
+    <string name="rom_load_failed">Gagal memuat ROM. File rusak atau bukan ROM NDS.</string>
+    <string name="menu_resume">Lanjutkan</string>
+    <string name="menu_save_state">Simpan state</string>
+    <string name="menu_load_state">Muat state</string>
+    <string name="menu_fast_forward">Fast-forward</string>
+    <string name="menu_swap">Tukar layar</string>
+    <string name="menu_layout">Tata letak layar</string>
+    <string name="menu_resolution">Resolusi</string>
+    <string name="resolution_set">Resolusi %1$d× (%2$d×%3$d)</string>
+    <string name="gl_unavailable">GPU ini tidak mendukung OpenGL ES 3.2, memakai renderer software</string>
+    <string name="menu_toggle_controls">Tampilkan/sembunyikan kontrol</string>
+    <string name="menu_reset">Reset</string>
+    <string name="menu_quit">Keluar</string>
+    <string name="slot">Slot %d</string>
+    <string name="slot_empty">Slot %d (kosong)</string>
+    <string name="state_saved">State disimpan ke slot %d</string>
+    <string name="state_loaded">State slot %d dimuat</string>
+    <string name="state_failed">Gagal memproses state</string>
+    <string name="mp_ff_disabled">Fast-forward dimatikan selama multiplayer</string>
+
+    <string-array name="layouts">
+        <item>Otomatis</item>
+        <item>Atas-bawah</item>
+        <item>Berdampingan</item>
+        <item>Hybrid (atas besar)</item>
+        <item>Hanya layar atas</item>
+        <item>Hanya layar bawah</item>
+    </string-array>
+
+    <!-- multiplayer -->
+    <string name="mp_title">Multiplayer Lokal &amp; Online</string>
+    <string name="mp_player_name">Nama pemain</string>
+    <string name="mp_host">Buat room (host)</string>
+    <string name="mp_max_players">Maks. pemain</string>
+    <string name="mp_join_ip">Gabung via IP / hostname</string>
+    <string name="mp_join">Gabung</string>
+    <string name="mp_lan_rooms">Room di jaringan lokal</string>
+    <string name="mp_no_rooms">Mencari room… pastikan semua perangkat di Wi-Fi / hotspot yang sama.</string>
+    <string name="mp_players">Pemain di room</string>
+    <string name="mp_start_game">Pilih game &amp; mulai</string>
+    <string name="mp_leave">Tinggalkan room</string>
+    <string name="mp_your_ip">Alamat kamu: %s\nPort UDP 7064</string>
+    <string name="mp_host_failed">Gagal membuat room. Port 7064 mungkin sudah dipakai.</string>
+    <string name="mp_join_failed">Gagal terhubung ke %s</string>
+    <string name="mp_connected_as_host">Kamu host. Bagikan alamat di atas ke teman.</string>
+    <string name="mp_connected_as_client">Terhubung ke host.</string>
+    <string name="mp_help">Offline: semua perangkat di Wi-Fi atau hotspot yang sama, room muncul otomatis.\n\nOnline: host membuka port UDP 7064 (port forwarding) atau semua pemain memakai VPN mesh seperti Tailscale / ZeroTier, lalu gabung lewat IP host.\n\nSetelah semua terhubung, tiap pemain memuat game yang SAMA lalu masuk ke menu wireless/DS Download Play di dalam game.\n\nNintendo WFC (online resmi) bisa memakai server pengganti seperti Wiimmfi: isi DNS kustom di Pengaturan.</string>
+    <string name="mp_status_host">Host</string>
+    <string name="mp_status_client">Pemain</string>
+    <string name="mp_status_connecting">Menyambung…</string>
+    <string name="mp_status_disconnected">Terputus</string>
+    <string name="mp_session_active">Sesi multiplayer aktif (%d pemain)</string>
+
+    <!-- diagnostics -->
+    <string name="diag_crash_title">MabarDs berhenti tiba-tiba</string>
+    <string name="diag_log_title">Log diagnostik</string>
+    <string name="diag_message">Laporan berisi info perangkat dan log aplikasi (tanpa data pribadi lain). Bagikan atau salin, lalu kirimkan untuk membantu memperbaiki masalah.</string>
+    <string name="diag_share">Bagikan</string>
+    <string name="diag_copy">Salin</string>
+    <string name="diag_copied">Log disalin</string>
+    <string name="mp_menu_running">Multiplayer aktif: game tetap berjalan selama menu terbuka</string>
+    <string name="mp_not_available">Tidak tersedia saat multiplayer (bisa memutus koneksi)</string>
+</resources>

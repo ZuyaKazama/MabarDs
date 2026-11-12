@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="layout_values"><item>0</item><item>1</item><item>2</item><item>3</item><item>4</item><item>5</item></string-array>
+    <string-array name="interp_names"><item>Tidak ada (tercepat)</item><item>Linear</item><item>Cosine</item><item>Cubic</item></string-array>
+    <string-array name="interp_values"><item>0</item><item>1</item><item>2</item><item>3</item></string-array>
+    <string-array name="ff_names"><item>2×</item><item>3×</item><item>4×</item><item>Tanpa batas</item></string-array>
+    <string-array name="ff_values"><item>2</item><item>3</item><item>4</item><item>0</item></string-array>
+    <string-array name="lang_names"><item>Jepang</item><item>Inggris</item><item>Prancis</item><item>Jerman</item><item>Italia</item><item>Spanyol</item></string-array>
+    <string-array name="lang_values"><item>0</item><item>1</item><item>2</item><item>3</item><item>4</item><item>5</item></string-array>
+    <string-array name="renderer_names"><item>Software (resolusi asli)</item><item>OpenGL ES (resolusi tinggi, eksperimental)</item></string-array>
+    <string-array name="speed_hack_names">
+        <item>Akurat (paling kompatibel)</item>
+        <item>Cepat (sedikit kurang akurat)</item>
+        <item>Sangat cepat (bisa merusak sebagian game)</item>
+    </string-array>
+    <string-array name="speed_hack_values"><item>0</item><item>1</item><item>2</item></string-array>
+    <string-array name="frameskip_names">
+        <item>Otomatis (hanya saat lambat, disarankan)</item>
+        <item>Mati</item>
+        <item>1 (tampilkan 1 dari 2 frame)</item>
+        <item>2 (tampilkan 1 dari 3 frame)</item>
+        <item>3 (tampilkan 1 dari 4 frame)</item>
+    </string-array>
+    <string-array name="frameskip_values"><item>-1</item><item>0</item><item>1</item><item>2</item><item>3</item></string-array>
+    <string-array name="renderer_values"><item>0</item><item>1</item></string-array>
+    <string-array name="scale_names">
+        <item>1× — 256×192 (asli)</item><item>2× — 512×384</item><item>3× — 768×576</item>
+        <item>4× — 1024×768</item><item>5× — 1280×960</item><item>6× — 1536×1152</item>
+    </string-array>
+    <string-array name="scale_values"><item>1</item><item>2</item><item>3</item><item>4</item><item>5</item><item>6</item></string-array>
+    <string-array name="jit_block_names"><item>8 (paling kompatibel)</item><item>16</item><item>32 (tercepat)</item></string-array>
+    <string-array name="jit_block_values"><item>8</item><item>16</item><item>32</item></string-array>
+    <string-array name="color_names">
+        <item>Abu-abu</item><item>Coklat</item><item>Merah</item><item>Pink</item><item>Oranye</item><item>Kuning</item>
+        <item>Lime</item><item>Hijau</item><item>Hijau tua</item><item>Toska</item><item>Biru muda</item><item>Biru</item>
+        <item>Biru tua</item><item>Ungu tua</item><item>Ungu</item><item>Magenta</item>
+    </string-array>
+    <string-array name="color_values">
+        <item>0</item><item>1</item><item>2</item><item>3</item><item>4</item><item>5</item><item>6</item><item>7</item>
+        <item>8</item><item>9</item><item>10</item><item>11</item><item>12</item><item>13</item><item>14</item><item>15</item>
+    </string-array>
+</resources>
