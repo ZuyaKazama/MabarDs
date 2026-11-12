@@ -17,8 +17,8 @@ android {
         applicationId = "com.emunds.nds"
         minSdk = 26          // AAudio + GLES 3
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.1.6"
+        versionCode = 7
+        versionName = "0.1.7"
 
         ndk {
             // The melonDS JIT targets AArch64 (and x86-64); 32-bit ARM would be interpreter-only and too slow.
